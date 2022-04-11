@@ -6,7 +6,7 @@ library(readr)
 ## Term: YYYYS, S=1, 2, 3 refers to spring, summer, fall
 current_term <- 20221 # spring 2022
 academic_renew_up_to_term <- 20212 # 2 terms must have past since non-satisfactory grades, so anything sooner than summer 2021
-recent_earned_units_satisfactory <- 12
+recent_satisfactory_earned_units <- 12
 recent_satisfactory_gpa <- 2.5
 grades_in_gpa_calc <- c('A', 'B', 'C', 'D', 'F', 'FW')
 non_satisfactory_grades <- c('D', 'F', 'FW')
@@ -34,11 +34,11 @@ d_term_eligible <- d_transcript %>%
     , rev_Cum_EarnedUnits=cumsum(Term_EarnedUnits)
     , rev_Cum_GradePoints=cumsum(Term_GradePoints)
     , rev_Cum_GPA=rev_Cum_GradePoints / rev_Cum_AttemptedUnits
-    , Flag_Term_Earned_X_Units_Recent=ifelse((rev_Cum_EarnedUnits >= recent_earned_units_satisfactory) & (lag(rev_Cum_EarnedUnits, 1) < recent_earned_units_satisfactory | is.na(lag(rev_Cum_EarnedUnits, 1))), 1, 0)
-    , Flag_Term_Qualify_Academic_Renewal_X_Units=ifelse(Flag_Term_Earned_X_Units_Recent == 1 & rev_Cum_GPA >= recent_satisfactory_gpa, 1, 0)
+    , Flag_Term_Earned_X_Units_Recent=ifelse((rev_Cum_EarnedUnits >= recent_satisfactory_earned_units) & (lag(rev_Cum_EarnedUnits, 1) < recent_satisfactory_earned_units | is.na(lag(rev_Cum_EarnedUnits, 1))), 1, 0) # Starting with the current term and counting backwards, what is the most recent term where a student met the recent satisfactory earned units threshold?
+    , Flag_Term_Qualify_Academic_Renewal_X_Units=ifelse(Flag_Term_Earned_X_Units_Recent == 1 & rev_Cum_GPA >= recent_satisfactory_gpa, 1, 0) # Starting with the current term and counting backwards, which term did a student meet the recent satisfactory earned units threshold and satisfactory GPA threshold?
   ) %>%
   ungroup %>%
-  filter(Flag_Term_Qualify_Academic_Renewal_X_Units == 1)
+  filter(Flag_Term_Qualify_Academic_Renewal_X_Units == 1) # Keep the term of interest
 
 d_term_eligible %>% as.data.frame
 ## Note: only 2 students qualify meet the criteria of satisfactory progress on GPA and units earned in their latest terms.
